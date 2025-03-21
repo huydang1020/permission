@@ -36,7 +36,7 @@ type IDatabase interface {
 	UpdateUser(req *pb.User) error
 }
 
-func NewPermisssion(cf *Config) (*Permission, error) {
+func NewPermisssion(cf *Configs) (*Permission, error) {
 	dbase := &db.DB{}
 	if err := dbase.ConnectDb(cf.DBPath, cf.DBName); err != nil {
 		return nil, err

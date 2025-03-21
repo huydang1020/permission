@@ -14,28 +14,25 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type Config struct {
+type Configs struct {
 	GRPCPort string
 	DBPath   string
 	DBName   string
 }
 
-var config = LoadConfig()
+var config *Configs
 
-func LoadConfig() *Config {
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading env:", err)
 	}
-	return &Config{
+	config = &Configs{
 		GRPCPort: os.Getenv("GRPC_PORT"),
 		DBPath:   os.Getenv("DB_PATH"),
 		DBName:   os.Getenv("DB_NAME"),
 	}
-}
-
-func init() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
 func startApp(ctx *cli.Context) error {
