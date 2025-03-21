@@ -1,11 +1,15 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	pb "github.com/huyshop/header/permission"
+	"github.com/huyshop/permission/utils"
 	"xorm.io/xorm"
 )
 
@@ -33,4 +37,245 @@ func (d *DB) ConnectDb(sqlPath, dbName string) error {
 	d.engine = engine
 	d.engine.ShowSQL(false)
 	return err
+}
+
+func (d *DB) InsertRole(req *pb.Role) (*pb.Role, error) {
+	count, err := d.engine.Insert(req)
+	if err != nil {
+		return nil, err
+	}
+	if count < 1 {
+		return nil, errors.New(utils.E_can_not_insert)
+	}
+	return req, nil
+}
+
+func (d *DB) GetRole(req *pb.Role) (*pb.Role, error) {
+	role := &pb.Role{Id: req.Id}
+	b, err := d.engine.Get(role)
+	if err != nil {
+		return nil, err
+	}
+	if !b {
+		return nil, errors.New(utils.E_not_found)
+	}
+	return role, nil
+}
+
+func (d *DB) listRoleQuery(req *pb.RoleRequest) *xorm.Session {
+	ss := d.engine.Table("role")
+	if req.Name != "" {
+		ss.And("name LIKE ?", "%"+req.Name+"%")
+	}
+	return ss
+}
+
+func (d *DB) ListRole(req *pb.RoleRequest) ([]*pb.Role, error) {
+	roles := []*pb.Role{}
+	ss := d.listRoleQuery(req)
+	err := ss.Desc(".created_at").Find(&roles)
+	if err != nil {
+		log.Println("get list:", err)
+		return nil, err
+	}
+	return roles, nil
+}
+
+func (d *DB) IsRoleExist(req *pb.Role) (bool, error) {
+	b, err := d.engine.Exist(&pb.Role{Id: req.Id})
+	if err != nil {
+		return false, err
+	}
+	return b, err
+}
+
+func (d *DB) UpdateRole(req *pb.Role) error {
+	b, err := d.IsRoleExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Update(req, &pb.Role{Id: req.Id})
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_update)
+	}
+	return nil
+}
+
+func (d *DB) DeleteRole(req *pb.Role) error {
+	b, err := d.IsRoleExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Delete(req)
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_delete)
+	}
+	return nil
+}
+
+func (d *DB) InsertPage(req *pb.Page) (*pb.Page, error) {
+	count, err := d.engine.Insert(req)
+	if err != nil {
+		return nil, err
+	}
+	if count < 1 {
+		return nil, errors.New(utils.E_can_not_insert)
+	}
+	return req, nil
+}
+
+func (d *DB) GetPage(req *pb.Page) (*pb.Page, error) {
+	page := &pb.Page{Id: req.Id}
+	b, err := d.engine.Get(page)
+	if err != nil {
+		return nil, err
+	}
+	if !b {
+		return nil, errors.New(utils.E_not_found)
+	}
+	return page, nil
+}
+
+func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
+	// d.engine.ShowSQL(true)
+	ss := d.engine.Table("page")
+	if len(req.RoleIds) > 0 {
+		for _, id := range req.RoleIds {
+			ss.And("roles LIKE ?", "%"+strconv.Itoa(int(id))+"%")
+		}
+	} else if req.RoleId != 0 {
+		ss.And("roles LIKE ?", "%"+strconv.Itoa(int(req.RoleId))+"%")
+	}
+	if req.Name != "" {
+		ss.And("name LIKE ?", "%"+req.Name+"%")
+	}
+	if req.Label != "" {
+		ss.And("label LIKE ?", "%"+req.Label+"%")
+	}
+	if req.Router != "" {
+		ss.And("router LIKE ?", "%"+req.Router+"%")
+	}
+	if req.Type != "" {
+		ss.And("type = ?", req.Type)
+	}
+	if req.ParentId != 0 {
+		ss.And("parentId = ?", req.ParentId)
+	}
+	return ss
+}
+
+func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
+	pages := []*pb.Page{}
+	ss := d.listPageQuery(req)
+	err := ss.Asc("order").Find(&pages)
+	if err != nil {
+		log.Println("get list:", err)
+		return nil, err
+	}
+	return pages, nil
+}
+
+func (d *DB) IsPageExist(req *pb.Page) (bool, error) {
+	b, err := d.engine.Exist(&pb.Page{Id: req.Id})
+	if err != nil {
+		return false, err
+	}
+	return b, err
+}
+
+func (d *DB) UpdatePage(req *pb.Page) error {
+	b, err := d.IsPageExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Update(req, &pb.Page{Id: req.Id})
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_update)
+	}
+	return nil
+}
+
+func (d *DB) DeletePage(req *pb.Page) error {
+	b, err := d.IsPageExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Delete(req)
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_delete)
+	}
+	return nil
+}
+
+func (d *DB) InsertUser(req *pb.User) (*pb.User, error) {
+	count, err := d.engine.Insert(req)
+	if err != nil {
+		return nil, err
+	}
+	if count < 1 {
+		return nil, errors.New(utils.E_can_not_insert)
+	}
+	return req, nil
+}
+
+func (d *DB) GetUser(req *pb.User) (*pb.User, error) {
+	user := &pb.User{Id: req.Id}
+	b, err := d.engine.Get(user)
+	if err != nil {
+		return nil, err
+	}
+	if !b {
+		return nil, errors.New(utils.E_not_found)
+	}
+	return user, nil
+}
+
+func (d *DB) IsUserExist(req *pb.User) (bool, error) {
+	b, err := d.engine.Exist(&pb.User{Id: req.Id})
+	if err != nil {
+		return false, err
+	}
+	return b, err
+}
+
+func (d *DB) UpdateUser(req *pb.User) error {
+	b, err := d.IsUserExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Update(req, &pb.User{Id: req.Id})
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_update)
+	}
+	return nil
 }

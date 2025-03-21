@@ -42,5 +42,8 @@ func (d *DB) CreateDb() error {
 	if err := createTable(&pb.Page{}, tblPage, d.engine); err != nil {
 		return err
 	}
+	if err := createTable(&pb.User{}, tblUser, d.engine); err != nil {
+		return err
+	}
 	return nil
 }

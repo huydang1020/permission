@@ -16,7 +16,25 @@ type Permission struct {
 	Db IDatabase
 }
 
-type IDatabase interface{}
+type IDatabase interface {
+	InsertRole(req *pb.Role) (*pb.Role, error)
+	GetRole(req *pb.Role) (*pb.Role, error)
+	ListRole(req *pb.RoleRequest) ([]*pb.Role, error)
+	UpdateRole(req *pb.Role) error
+	DeleteRole(req *pb.Role) error
+	IsRoleExist(req *pb.Role) (bool, error)
+
+	InsertPage(req *pb.Page) (*pb.Page, error)
+	GetPage(req *pb.Page) (*pb.Page, error)
+	ListPage(req *pb.PageRequest) ([]*pb.Page, error)
+	UpdatePage(req *pb.Page) error
+	IsPageExist(req *pb.Page) (bool, error)
+	DeletePage(req *pb.Page) error
+
+	InsertUser(req *pb.User) (*pb.User, error)
+	GetUser(req *pb.User) (*pb.User, error)
+	UpdateUser(req *pb.User) error
+}
 
 func NewPermisssion(cf *Config) (*Permission, error) {
 	dbase := &db.DB{}
