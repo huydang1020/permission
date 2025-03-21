@@ -23,6 +23,7 @@ type IDatabase interface {
 	UpdateRole(req *pb.Role) error
 	DeleteRole(req *pb.Role) error
 	IsRoleExist(req *pb.Role) (bool, error)
+	CountRoles(rq *pb.RoleRequest) (int64, error)
 
 	InsertPage(req *pb.Page) (*pb.Page, error)
 	GetPage(req *pb.Page) (*pb.Page, error)
@@ -30,6 +31,7 @@ type IDatabase interface {
 	UpdatePage(req *pb.Page) error
 	IsPageExist(req *pb.Page) (bool, error)
 	DeletePage(req *pb.Page) error
+	CountPages(rq *pb.PageRequest) (int64, error)
 
 	InsertUser(req *pb.User) (*pb.User, error)
 	GetUser(req *pb.User) (*pb.User, error)

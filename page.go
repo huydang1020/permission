@@ -36,7 +36,7 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 	return page, nil
 }
 
-func (p *Permission) GetPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
+func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
 	if req == nil {
 		return nil, errors.New("page is nil")
 	}
@@ -44,7 +44,8 @@ func (p *Permission) GetPages(ctx context.Context, req *pb.PageRequest) (*pb.Pag
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Pages{Pages: pages}, nil
+	count, _ := p.Db.CountPages(req)
+	return &pb.Pages{Pages: pages, Total: count}, nil
 }
 
 func (p *Permission) ListPage(ctx context.Context, req *pb.PageRequest) ([]*pb.Page, error) {

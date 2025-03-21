@@ -37,7 +37,7 @@ func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role
 	return role, nil
 }
 
-func (p *Permission) GetRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Roles, error) {
+func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Roles, error) {
 	if req == nil {
 		return nil, errors.New(utils.E_not_found)
 	}
@@ -45,18 +45,8 @@ func (p *Permission) GetRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Rol
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Roles{Roles: roles}, nil
-}
-
-func (p *Permission) ListRole(ctx context.Context, req *pb.RoleRequest) ([]*pb.Role, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
-	roles, err := p.Db.ListRole(req)
-	if err != nil {
-		return nil, err
-	}
-	return roles, nil
+	count, _ := p.Db.CountRoles(req)
+	return &pb.Roles{Roles: roles, Total: count}, nil
 }
 
 func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {

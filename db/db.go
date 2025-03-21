@@ -81,6 +81,11 @@ func (d *DB) ListRole(req *pb.RoleRequest) ([]*pb.Role, error) {
 	return roles, nil
 }
 
+func (d *DB) CountRoles(rq *pb.RoleRequest) (int64, error) {
+	ss := d.listRoleQuery(rq)
+	return ss.Count()
+}
+
 func (d *DB) IsRoleExist(req *pb.Role) (bool, error) {
 	b, err := d.engine.Exist(&pb.Role{Id: req.Id})
 	if err != nil {
@@ -185,6 +190,11 @@ func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
 		return nil, err
 	}
 	return pages, nil
+}
+
+func (d *DB) CountPages(rq *pb.PageRequest) (int64, error) {
+	ss := d.listPageQuery(rq)
+	return ss.Count()
 }
 
 func (d *DB) IsPageExist(req *pb.Page) (bool, error) {
