@@ -27,7 +27,7 @@ func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role
 	if req == nil {
 		return nil, errors.New(utils.E_not_found)
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("role id is empty")
 	}
 	role, err := p.Db.GetRole(&pb.Role{Id: req.GetId()})
@@ -53,7 +53,7 @@ func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, er
 	if req == nil {
 		return nil, errors.New(utils.E_not_found)
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("role id is empty")
 	}
 	err := p.Db.UpdateRole(req)
@@ -71,7 +71,7 @@ func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empt
 	if req == nil {
 		return nil, errors.New(utils.E_not_found)
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("role id is empty")
 	}
 	if err := p.Db.DeleteRole(req); err != nil {

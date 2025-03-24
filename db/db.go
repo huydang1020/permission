@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -158,10 +157,10 @@ func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 	ss := d.engine.Table("page")
 	if len(req.RoleIds) > 0 {
 		for _, id := range req.RoleIds {
-			ss.And("roles LIKE ?", "%"+strconv.Itoa(int(id))+"%")
+			ss.And("roles LIKE ?", "%"+id+"%")
 		}
-	} else if req.RoleId != 0 {
-		ss.And("roles LIKE ?", "%"+strconv.Itoa(int(req.RoleId))+"%")
+	} else if req.RoleId != "" {
+		ss.And("roles LIKE ?", "%"+req.RoleId+"%")
 	}
 	if req.Name != "" {
 		ss.And("name LIKE ?", "%"+req.Name+"%")

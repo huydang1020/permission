@@ -26,7 +26,7 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 	if req == nil {
 		return nil, errors.New("page is nil")
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("page id is empty")
 	}
 	page, err := p.Db.GetPage(&pb.Page{Id: req.GetId()})
@@ -60,7 +60,7 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	if req == nil {
 		return nil, errors.New("page is nil")
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("page id is empty")
 	}
 	err := p.Db.UpdatePage(req)
@@ -78,7 +78,7 @@ func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empt
 	if req == nil {
 		return nil, errors.New("page is nil")
 	}
-	if req.GetId() == 0 {
+	if req.GetId() == "" {
 		return nil, errors.New("page id is empty")
 	}
 	return nil, nil
