@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
+	"time"
 
 	"github.com/huyshop/header/common"
 	pb "github.com/huyshop/header/permission"
@@ -10,12 +12,12 @@ import (
 )
 
 func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
 	if req.GetName() == "" {
-		return nil, errors.New("role name is empty")
+		return nil, errors.New(utils.E_not_found_name)
 	}
+	req.Id = utils.MakeRoleId()
+	req.CreatedAt = time.Now().Unix()
+	req.Status = int32(pb.Page_active)
 	role, err := p.Db.InsertRole(req)
 	if err != nil {
 		return nil, err
@@ -24,11 +26,8 @@ func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*pb.Role, er
 }
 
 func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
 	if req.GetId() == "" {
-		return nil, errors.New("role id is empty")
+		return nil, errors.New(utils.E_not_found_id)
 	}
 	role, err := p.Db.GetRole(&pb.Role{Id: req.GetId()})
 	if err != nil {
@@ -38,9 +37,7 @@ func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role
 }
 
 func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Roles, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
+	log.Println("req: ", req)
 	roles, err := p.Db.ListRole(req)
 	if err != nil {
 		return nil, err
@@ -50,12 +47,10 @@ func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Ro
 }
 
 func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
 	if req.GetId() == "" {
-		return nil, errors.New("role id is empty")
+		return nil, errors.New(utils.E_not_found_id)
 	}
+	req.UpdatedAt = time.Now().Unix()
 	err := p.Db.UpdateRole(req)
 	if err != nil {
 		return nil, err
@@ -68,11 +63,8 @@ func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, er
 }
 
 func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empty, error) {
-	if req == nil {
-		return nil, errors.New(utils.E_not_found)
-	}
 	if req.GetId() == "" {
-		return nil, errors.New("role id is empty")
+		return nil, errors.New(utils.E_not_found_id)
 	}
 	if err := p.Db.DeleteRole(req); err != nil {
 		return nil, err

@@ -174,8 +174,8 @@ func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 	if req.Type != "" {
 		ss.And("type = ?", req.Type)
 	}
-	if req.ParentId != 0 {
-		ss.And("parentId = ?", req.ParentId)
+	if req.ParentId != "" {
+		ss.And("parent_id = ?", req.ParentId)
 	}
 	return ss
 }
