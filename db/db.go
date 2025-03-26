@@ -181,8 +181,12 @@ func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 }
 
 func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
+	log.Println("req")
 	pages := []*pb.Page{}
 	ss := d.listPageQuery(req)
+	if req.GetLimit() != 0 {
+		ss.Limit(int(req.GetLimit()), int(req.GetLimit())*int(req.GetSkip()))
+	}
 	err := ss.Asc("order").Find(&pages)
 	if err != nil {
 		log.Println("get list:", err)

@@ -44,7 +44,6 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 }
 
 func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
-
 	pages, err := p.Db.ListPage(req)
 	if err != nil {
 		return nil, err
