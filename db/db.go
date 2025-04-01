@@ -38,15 +38,15 @@ func (d *DB) ConnectDb(sqlPath, dbName string) error {
 	return err
 }
 
-func (d *DB) InsertRole(req *pb.Role) (*pb.Role, error) {
+func (d *DB) InsertRole(req *pb.Role) error {
 	count, err := d.engine.Insert(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if count < 1 {
-		return nil, errors.New(utils.E_can_not_insert)
+		return errors.New(utils.E_can_not_insert)
 	}
-	return req, nil
+	return nil
 }
 
 func (d *DB) GetRole(req *pb.Role) (*pb.Role, error) {
@@ -153,14 +153,11 @@ func (d *DB) GetPage(req *pb.Page) (*pb.Page, error) {
 }
 
 func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
-	// d.engine.ShowSQL(true)
 	ss := d.engine.Table("page")
-	if len(req.RoleIds) > 0 {
-		for _, id := range req.RoleIds {
-			ss.And("roles LIKE ?", "%"+id+"%")
-		}
-	} else if req.RoleId != "" {
-		ss.And("roles LIKE ?", "%"+req.RoleId+"%")
+	if len(req.Ids) > 0 {
+		ss.In("id", req.Ids)
+	} else if req.Id != "" {
+		ss.And("id = ?", req.Id)
 	}
 	if req.Name != "" {
 		ss.And("name LIKE ?", "%"+req.Name+"%")
@@ -181,7 +178,6 @@ func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 }
 
 func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
-	log.Println("req")
 	pages := []*pb.Page{}
 	ss := d.listPageQuery(req)
 	if req.GetLimit() != 0 {
@@ -291,4 +287,63 @@ func (d *DB) UpdateUser(req *pb.User) error {
 		return errors.New(utils.E_can_not_update)
 	}
 	return nil
+}
+
+func (d *DB) TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error {
+	sess := d.engine.NewSession()
+	defer sess.Close()
+	if err := sess.Begin(); err != nil {
+		return err
+	}
+	count, err := sess.Insert(role)
+	if err != nil {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_insert)
+	}
+	if count < 1 {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_insert)
+	}
+	count, err = sess.Insert(pg)
+	if err != nil {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_insert)
+	}
+	if count < 1 {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_insert)
+	}
+	return sess.Commit()
+}
+
+func (d *DB) InsertPageRole(req *pb.PageRole) error {
+	count, err := d.engine.Insert(req)
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_insert)
+	}
+	return nil
+}
+
+func (d *DB) listPageRoleQuery(req *pb.PageRoleRequest) *xorm.Session {
+	ss := d.engine.Table("page_role")
+	if req.RoleId != "" {
+		ss.And("role_id = ?", req.RoleId)
+	}
+	if req.PageId != "" {
+		ss.And("page_id = ?", req.PageId)
+	}
+	return ss
+}
+
+func (d *DB) ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error) {
+	pr := []*pb.PageRole{}
+	ss := d.listPageRoleQuery(req)
+	err := ss.Find(&pr)
+	if err != nil {
+		return nil, err
+	}
+	return pr, nil
 }

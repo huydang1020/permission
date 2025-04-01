@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	tblUser = "user"
-	tblRole = "role"
-	tblPage = "page"
+	tblUser     = "user"
+	tblRole     = "role"
+	tblPage     = "page"
+	tblPageRole = "page_role"
 )
 
 func createTable(model interface{}, tblName string, engine *xorm.Engine) error {
@@ -42,7 +43,7 @@ func (d *DB) CreateDb() error {
 	if err := createTable(&pb.Page{}, tblPage, d.engine); err != nil {
 		return err
 	}
-	if err := createTable(&pb.User{}, tblUser, d.engine); err != nil {
+	if err := createTable(&pb.PageRole{}, tblPageRole, d.engine); err != nil {
 		return err
 	}
 	return nil

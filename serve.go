@@ -17,7 +17,7 @@ type Permission struct {
 }
 
 type IDatabase interface {
-	InsertRole(req *pb.Role) (*pb.Role, error)
+	InsertRole(req *pb.Role) error
 	GetRole(req *pb.Role) (*pb.Role, error)
 	ListRole(req *pb.RoleRequest) ([]*pb.Role, error)
 	UpdateRole(req *pb.Role) error
@@ -32,6 +32,10 @@ type IDatabase interface {
 	IsPageExist(req *pb.Page) (bool, error)
 	DeletePage(req *pb.Page) error
 	CountPages(rq *pb.PageRequest) (int64, error)
+
+	InsertPageRole(req *pb.PageRole) error
+	ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error)
+	TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error
 
 	InsertUser(req *pb.User) (*pb.User, error)
 	GetUser(req *pb.User) (*pb.User, error)

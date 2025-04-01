@@ -11,18 +11,26 @@ import (
 	"github.com/huyshop/permission/utils"
 )
 
-func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {
+func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empty, error) {
 	if req.GetName() == "" {
 		return nil, errors.New(utils.E_not_found_name)
 	}
 	req.Id = utils.MakeRoleId()
 	req.CreatedAt = time.Now().Unix()
 	req.Status = int32(pb.Page_active)
-	role, err := p.Db.InsertRole(req)
-	if err != nil {
+	if len(req.Permission) > 0 {
+		for _, perm := range req.Permission {
+			if err := p.Db.TransInsertPageRole(req, perm.PageRole); err != nil {
+				log.Println("trans insert pager role err:", err)
+				return nil, err
+			}
+		}
+		return &common.Empty{}, nil
+	}
+	if err := p.Db.InsertRole(req); err != nil {
 		return nil, err
 	}
-	return role, nil
+	return &common.Empty{}, nil
 }
 
 func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role, error) {

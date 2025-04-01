@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/huyshop/header/common"
@@ -44,36 +45,52 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 }
 
 func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
+	pageRoles := []*pb.PageRole{}
+	if req.GetRoleId() != "" {
+		prs, err := p.Db.ListPageRole(&pb.PageRoleRequest{RoleId: req.GetRoleId()})
+		if err != nil {
+			log.Println("err:", err)
+			return nil, err
+		}
+		pageIds := []string{}
+		for _, pr := range prs {
+			pageIds = append(pageIds, pr.GetPageId())
+		}
+		req.Ids = pageIds
+		pageRoles = prs
+	}
 	pages, err := p.Db.ListPage(req)
 	if err != nil {
 		return nil, err
+	}
+	if len(pageRoles) > 0 {
+		for _, page := range pages {
+			for _, pr := range pageRoles {
+				if page.GetId() == pr.GetPageId() {
+					page.Actions = pr.GetActions()
+				}
+			}
+		}
 	}
 	count, _ := p.Db.CountPages(req)
 	return &pb.Pages{Pages: pages, Total: count}, nil
 }
 
-func (p *Permission) ListPage(ctx context.Context, req *pb.PageRequest) ([]*pb.Page, error) {
-	pages, err := p.Db.ListPage(req)
-	if err != nil {
-		return nil, err
-	}
-	return pages, nil
-}
-
 func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {
-	if req.GetId() == "" {
-		return nil, errors.New(utils.E_not_found_id)
-	}
-	req.UpdatedAt = time.Now().Unix()
-	err := p.Db.UpdatePage(req)
-	if err != nil {
-		return nil, err
-	}
-	page, err := p.Db.GetPage(req)
-	if err != nil {
-		return nil, err
-	}
-	return page, nil
+	// if req.GetId() == "" {
+	// 	return nil, errors.New(utils.E_not_found_id)
+	// }
+	// req.UpdatedAt = time.Now().Unix()
+	// err := p.Db.UpdatePage(req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// page, err := p.Db.GetPage(req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return page, nil
+	return nil, nil
 }
 
 func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empty, error) {
