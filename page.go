@@ -72,8 +72,11 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 			}
 		}
 	}
+	if len(pages) == 0 {
+		return &pb.Pages{Pages: pages, Total: 0, Anchor: ""}, nil
+	}
 	count, _ := p.Db.CountPages(req)
-	return &pb.Pages{Pages: pages, Total: count}, nil
+	return &pb.Pages{Pages: pages, Total: count, Anchor: pages[len(pages)-1].GetId()}, nil
 }
 
 func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {

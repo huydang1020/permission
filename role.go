@@ -50,8 +50,11 @@ func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Ro
 	if err != nil {
 		return nil, err
 	}
+	if len(roles) == 0 {
+		return &pb.Roles{}, nil
+	}
 	count, _ := p.Db.CountRoles(req)
-	return &pb.Roles{Roles: roles, Total: count}, nil
+	return &pb.Roles{Roles: roles, Total: count, Anchor: roles[len(roles)-1].GetId()}, nil
 }
 
 func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {

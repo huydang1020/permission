@@ -183,7 +183,7 @@ func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
 	if req.GetLimit() != 0 {
 		ss.Limit(int(req.GetLimit()), int(req.GetLimit())*int(req.GetSkip()))
 	}
-	err := ss.Asc("order").Find(&pages)
+	err := ss.Desc("created_at").Find(&pages)
 	if err != nil {
 		log.Println("get list:", err)
 		return nil, err
