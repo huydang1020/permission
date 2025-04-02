@@ -22,6 +22,18 @@ func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	if err != nil {
 		return nil, err
 	}
+	if req.GetRoleActions() != nil {
+		for _, pr := range req.GetRoleActions() {
+			pr.PageId = page.GetId()
+			if pr.GetRoleId() == "" {
+				return nil, errors.New(utils.E_not_found_role_id)
+			}
+			if err := p.Db.InsertPageRole(pr); err != nil {
+				log.Println("insert page role err:", err)
+				return nil, err
+			}
+		}
+	}
 	return page, nil
 }
 
@@ -80,20 +92,31 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 }
 
 func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {
-	// if req.GetId() == "" {
-	// 	return nil, errors.New(utils.E_not_found_id)
-	// }
-	// req.UpdatedAt = time.Now().Unix()
-	// err := p.Db.UpdatePage(req)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// page, err := p.Db.GetPage(req)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return page, nil
-	return nil, nil
+	if req.GetId() == "" {
+		return nil, errors.New(utils.E_not_found_id)
+	}
+	req.UpdatedAt = time.Now().Unix()
+	err := p.Db.UpdatePage(req)
+	if err != nil {
+		return nil, err
+	}
+	if req.GetRoleActions() != nil {
+		for _, pr := range req.GetRoleActions() {
+			pr.PageId = req.GetId()
+			if pr.GetRoleId() == "" {
+				return nil, errors.New(utils.E_not_found_role_id)
+			}
+			if err := p.Db.UpdatePageRole(pr); err != nil {
+				log.Println("insert page role err:", err)
+				return nil, err
+			}
+		}
+	}
+	page, err := p.Db.GetPage(req)
+	if err != nil {
+		return nil, err
+	}
+	return page, nil
 }
 
 func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empty, error) {

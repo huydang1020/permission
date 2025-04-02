@@ -23,4 +23,5 @@ const (
 	E_can_not_insert          = "can_not_insert"
 	E_can_not_update          = "can_not_update"
 	E_can_not_delete          = "can_not_delete"
+	E_not_found_role_id       = "not_found_role_id"
 )

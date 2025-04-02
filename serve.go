@@ -36,6 +36,7 @@ type IDatabase interface {
 	InsertPageRole(req *pb.PageRole) error
 	ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error)
 	TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error
+	UpdatePageRole(req *pb.PageRole) error
 
 	InsertUser(req *pb.User) (*pb.User, error)
 	GetUser(req *pb.User) (*pb.User, error)

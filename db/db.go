@@ -72,7 +72,7 @@ func (d *DB) listRoleQuery(req *pb.RoleRequest) *xorm.Session {
 func (d *DB) ListRole(req *pb.RoleRequest) ([]*pb.Role, error) {
 	roles := []*pb.Role{}
 	ss := d.listRoleQuery(req)
-	err := ss.Desc(".created_at").Find(&roles)
+	err := ss.Desc("created_at").Find(&roles)
 	if err != nil {
 		log.Println("get list:", err)
 		return nil, err
@@ -323,6 +323,32 @@ func (d *DB) InsertPageRole(req *pb.PageRole) error {
 	}
 	if count < 1 {
 		return errors.New(utils.E_can_not_insert)
+	}
+	return nil
+}
+
+func (d *DB) IsPageRoleExist(req *pb.PageRole) (bool, error) {
+	b, err := d.engine.Exist(&pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
+	if err != nil {
+		return false, err
+	}
+	return b, err
+}
+
+func (d *DB) UpdatePageRole(req *pb.PageRole) error {
+	b, err := d.IsPageRoleExist(req)
+	if err != nil {
+		return err
+	}
+	if !b {
+		return errors.New(utils.E_not_found)
+	}
+	count, err := d.engine.Update(req, &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_update)
 	}
 	return nil
 }
