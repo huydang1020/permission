@@ -17,7 +17,7 @@ func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empt
 	}
 	req.Id = utils.MakeRoleId()
 	req.CreatedAt = time.Now().Unix()
-	req.Status = int32(pb.Page_active)
+	req.State = pb.Page_active.String()
 	if len(req.Permission) > 0 {
 		for _, perm := range req.Permission {
 			if err := p.Db.TransInsertPageRole(req, perm.PageRole); err != nil {
@@ -54,7 +54,7 @@ func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Ro
 		return &pb.Roles{}, nil
 	}
 	count, _ := p.Db.CountRoles(req)
-	return &pb.Roles{Roles: roles, Total: count, Anchor: roles[len(roles)-1].GetId()}, nil
+	return &pb.Roles{Roles: roles, Total: count}, nil
 }
 
 func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {

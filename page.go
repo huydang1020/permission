@@ -17,7 +17,7 @@ func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	}
 	req.Id = utils.MakePageId()
 	req.CreatedAt = time.Now().Unix()
-	req.Status = int32(pb.Page_active)
+	req.State = pb.Page_active.String()
 	page, err := p.Db.InsertPage(req)
 	if err != nil {
 		return nil, err
@@ -85,10 +85,10 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		}
 	}
 	if len(pages) == 0 {
-		return &pb.Pages{Pages: pages, Total: 0, Anchor: ""}, nil
+		return &pb.Pages{Pages: pages, Total: 0}, nil
 	}
 	count, _ := p.Db.CountPages(req)
-	return &pb.Pages{Pages: pages, Total: count, Anchor: pages[len(pages)-1].GetId()}, nil
+	return &pb.Pages{Pages: pages, Total: count}, nil
 }
 
 func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {

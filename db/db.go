@@ -69,9 +69,6 @@ func (d *DB) listRoleQuery(req *pb.RoleRequest) *xorm.Session {
 	if req.GetName() != "" {
 		ss.And("name LIKE ?", "%"+req.GetName()+"%")
 	}
-	if req.GetLabel() != "" {
-		ss.And("label LIKE ?", "%"+req.GetLabel()+"%")
-	}
 	return ss
 }
 
@@ -168,11 +165,8 @@ func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 	if req.Name != "" {
 		ss.And("name LIKE ?", "%"+req.Name+"%")
 	}
-	if req.Label != "" {
-		ss.And("label LIKE ?", "%"+req.Label+"%")
-	}
-	if req.Router != "" {
-		ss.And("router LIKE ?", "%"+req.Router+"%")
+	if req.Route != "" {
+		ss.And("route LIKE ?", "%"+req.Route+"%")
 	}
 	if req.Type != "" {
 		ss.And("type = ?", req.Type)
@@ -242,55 +236,6 @@ func (d *DB) DeletePage(req *pb.Page) error {
 	}
 	if count < 1 {
 		return errors.New(utils.E_can_not_delete)
-	}
-	return nil
-}
-
-func (d *DB) InsertUser(req *pb.User) (*pb.User, error) {
-	count, err := d.engine.Insert(req)
-	if err != nil {
-		return nil, err
-	}
-	if count < 1 {
-		return nil, errors.New(utils.E_can_not_insert)
-	}
-	return req, nil
-}
-
-func (d *DB) GetUser(req *pb.User) (*pb.User, error) {
-	user := &pb.User{Id: req.Id}
-	b, err := d.engine.Get(user)
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, errors.New(utils.E_not_found)
-	}
-	return user, nil
-}
-
-func (d *DB) IsUserExist(req *pb.User) (bool, error) {
-	b, err := d.engine.Exist(&pb.User{Id: req.Id})
-	if err != nil {
-		return false, err
-	}
-	return b, err
-}
-
-func (d *DB) UpdateUser(req *pb.User) error {
-	b, err := d.IsUserExist(req)
-	if err != nil {
-		return err
-	}
-	if !b {
-		return errors.New(utils.E_not_found)
-	}
-	count, err := d.engine.Update(req, &pb.User{Id: req.Id})
-	if err != nil {
-		return err
-	}
-	if count < 1 {
-		return errors.New(utils.E_can_not_update)
 	}
 	return nil
 }
