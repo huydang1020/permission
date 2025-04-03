@@ -63,8 +63,14 @@ func (d *DB) GetRole(req *pb.Role) (*pb.Role, error) {
 
 func (d *DB) listRoleQuery(req *pb.RoleRequest) *xorm.Session {
 	ss := d.engine.Table("role")
-	if req.Name != "" {
-		ss.And("name LIKE ?", "%"+req.Name+"%")
+	if req.GetId() != "" {
+		ss.And("id = ?", req.GetId())
+	}
+	if req.GetName() != "" {
+		ss.And("name LIKE ?", "%"+req.GetName()+"%")
+	}
+	if req.GetLabel() != "" {
+		ss.And("label LIKE ?", "%"+req.GetLabel()+"%")
 	}
 	return ss
 }
