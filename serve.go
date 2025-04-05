@@ -32,6 +32,7 @@ type IDatabase interface {
 	IsPageExist(req *pb.Page) (bool, error)
 	DeletePage(req *pb.Page) error
 	CountPages(rq *pb.PageRequest) (int64, error)
+	TranDeletePage(req *pb.Page) error
 
 	InsertPageRole(req *pb.PageRole) error
 	ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error)

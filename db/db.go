@@ -240,6 +240,33 @@ func (d *DB) DeletePage(req *pb.Page) error {
 	return nil
 }
 
+func (d *DB) TranDeletePage(req *pb.Page) error {
+	sess := d.engine.NewSession()
+	defer sess.Close()
+	if err := sess.Begin(); err != nil {
+		return err
+	}
+	count, err := sess.Delete(req)
+	if err != nil {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_delete)
+	}
+	if count < 1 {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_delete)
+	}
+	count, err = sess.Delete(&pb.PageRole{PageId: req.Id})
+	if err != nil {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_delete)
+	}
+	if count < 1 {
+		sess.Rollback()
+		return errors.New(utils.E_can_not_delete)
+	}
+	return sess.Commit()
+}
+
 func (d *DB) TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error {
 	sess := d.engine.NewSession()
 	defer sess.Close()

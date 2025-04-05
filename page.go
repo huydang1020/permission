@@ -123,7 +123,7 @@ func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empt
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
-	err := p.Db.DeletePage(&pb.Page{Id: req.GetId()})
+	err := p.Db.TranDeletePage(&pb.Page{Id: req.GetId()})
 	if err != nil {
 		return nil, err
 	}
