@@ -79,7 +79,7 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		for _, page := range pages {
 			for _, pr := range pageRoles {
 				if page.GetId() == pr.GetPageId() {
-					page.Actions = pr.GetActions()
+					page.RoleActions = append(page.RoleActions, pr)
 				}
 			}
 		}
