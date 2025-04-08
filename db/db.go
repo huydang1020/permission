@@ -157,28 +157,29 @@ func (d *DB) GetPage(req *pb.Page) (*pb.Page, error) {
 
 func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {
 	ss := d.engine.Table("page")
-	if len(req.Ids) > 0 {
-		ss.In("id", req.Ids)
-	} else if req.Id != "" {
-		ss.And("id = ?", req.Id)
+	if len(req.GetIds()) > 0 {
+		ss.In("id", req.GetIds())
+	} else if req.GetId() != "" {
+		ss.And("id = ?", req.GetId())
 	}
-	if req.Name != "" {
-		ss.And("name LIKE ?", "%"+req.Name+"%")
+	if req.GetName() != "" {
+		ss.And("name LIKE ?", "%"+req.GetName()+"%")
 	}
-	if req.Route != "" {
-		ss.And("route LIKE ?", "%"+req.Route+"%")
+	if req.GetRoute() != "" {
+		ss.And("route LIKE ?", "%"+req.GetRoute()+"%")
 	}
-	if req.Type != "" {
-		ss.And("type = ?", req.Type)
+	if req.GetType() != "" {
+		ss.And("type = ?", req.GetType())
 	}
-	if req.ParentId != "" {
-		ss.And("parent_id = ?", req.ParentId)
+	if req.GetParentId() != "" {
+		ss.And("parent_id = ?", req.GetParentId())
 	}
 	return ss
 }
 
 func (d *DB) ListPage(req *pb.PageRequest) ([]*pb.Page, error) {
 	pages := []*pb.Page{}
+	log.Println("list page:", req)
 	ss := d.listPageQuery(req)
 	if req.GetLimit() != 0 {
 		ss.Limit(int(req.GetLimit()), int(req.GetLimit())*int(req.GetSkip()))

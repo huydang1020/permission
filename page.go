@@ -57,6 +57,7 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 }
 
 func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
+	log.Println("list page:", req)
 	roles, err := p.Db.ListRole(&pb.RoleRequest{Id: req.GetRoleId()})
 	if err != nil {
 		log.Println("err:", err)
@@ -71,18 +72,19 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		log.Println("err:", err)
 		return nil, err
 	}
-	pageIds := []string{}
+	// pageIds := []string{}
 	for _, pr := range pageRoles {
-		pageIds = append(pageIds, pr.GetPageId())
+		// pageIds = append(pageIds, pr.GetPageId())
 		if r, ok := mapRoles[pr.GetRoleId()]; ok {
 			pr.Role = &pb.Role{
+				Id:          r.GetId(),
 				Name:        r.GetName(),
 				Description: r.GetDescription(),
 				State:       r.GetState(),
 			}
 		}
 	}
-	req.Ids = pageIds
+	// req.Ids = pageIds
 	pages, err := p.Db.ListPage(req)
 	if err != nil {
 		return nil, err
@@ -91,7 +93,7 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		for _, page := range pages {
 			for _, pr := range pageRoles {
 				if page.GetId() == pr.GetPageId() {
-					page.RoleActions = append(page.RoleActions, &pb.PageRole{RoleId: pr.GetRoleId(), Actions: pr.GetActions()})
+					page.RoleActions = append(page.RoleActions, &pb.PageRole{RoleId: pr.GetRoleId(), Actions: pr.GetActions(), Role: pr.GetRole()})
 				}
 			}
 		}
