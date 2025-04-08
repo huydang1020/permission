@@ -18,8 +18,8 @@ func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empt
 	req.Id = utils.MakeRoleId()
 	req.CreatedAt = time.Now().Unix()
 	req.State = pb.Page_active.String()
-	if len(req.Permission) > 0 {
-		for _, perm := range req.Permission {
+	if len(req.Page) > 0 {
+		for _, perm := range req.Page {
 			if err := p.Db.TransInsertPageRole(req, perm.PageRole); err != nil {
 				log.Println("trans insert pager role err:", err)
 				return nil, err
