@@ -352,3 +352,35 @@ func (d *DB) ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error) {
 	}
 	return pr, nil
 }
+
+func (d *DB) GetPageRole(req *pb.PageRole) (*pb.PageRole, error) {
+	pageRole := &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId}
+	b, err := d.engine.Get(pageRole)
+	if err != nil {
+		return nil, err
+	}
+	if !b {
+		return nil, errors.New(utils.E_not_found)
+	}
+	return pageRole, nil
+}
+
+func (d *DB) TranDelPageRole(req []*pb.PageRole) error {
+	sess := d.engine.NewSession()
+	defer sess.Close()
+	if err := sess.Begin(); err != nil {
+		return err
+	}
+	for _, r := range req {
+		count, err := sess.Delete(r)
+		if err != nil {
+			sess.Rollback()
+			return errors.New(utils.E_can_not_delete)
+		}
+		if count < 1 {
+			sess.Rollback()
+			return errors.New(utils.E_can_not_delete)
+		}
+	}
+	return sess.Commit()
+}

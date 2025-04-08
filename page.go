@@ -114,14 +114,49 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	if err != nil {
 		return nil, err
 	}
-	if req.GetRoleActions() != nil {
-		for _, pr := range req.GetRoleActions() {
+	mapOldPR := map[string]*pb.PageRole{}
+	listpr, err := p.Db.ListPageRole(&pb.PageRoleRequest{PageId: req.GetId()})
+	if err != nil {
+		log.Println("list page role err:", err)
+		return nil, err
+	}
+	for _, pr := range listpr {
+		mapOldPR[pr.GetRoleId()] = pr
+	}
+	mapNewPR := map[string]*pb.PageRole{}
+	mapUpdatePR := map[string]*pb.PageRole{}
+	for _, pr := range req.GetRoleActions() {
+		if pr.GetRoleId() == "" {
+			return nil, errors.New(utils.E_not_found_role_id)
+		}
+		if _, ok := mapOldPR[pr.GetRoleId()]; ok {
+			mapUpdatePR[pr.GetRoleId()] = pr
+			delete(mapOldPR, pr.GetRoleId())
+		} else {
+			mapNewPR[pr.GetRoleId()] = pr
+		}
+	}
+	if len(mapNewPR) > 0 {
+		for _, pr := range mapNewPR {
 			pr.PageId = req.GetId()
-			if pr.GetRoleId() == "" {
-				return nil, errors.New(utils.E_not_found_role_id)
-			}
-			if err := p.Db.UpdatePageRole(pr); err != nil {
+			if err := p.Db.InsertPageRole(pr); err != nil {
 				log.Println("insert page role err:", err)
+				return nil, err
+			}
+		}
+	}
+	if len(mapOldPR) > 0 {
+		for _, pr := range mapOldPR {
+			if err := p.Db.TranDelPageRole([]*pb.PageRole{pr}); err != nil {
+				log.Println("delete page role err:", err)
+				return nil, err
+			}
+		}
+	}
+	if len(mapUpdatePR) > 0 {
+		for _, pr := range mapUpdatePR {
+			if err := p.Db.UpdatePageRole(pr); err != nil {
+				log.Println("update page role err:", err)
 				return nil, err
 			}
 		}

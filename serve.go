@@ -38,6 +38,8 @@ type IDatabase interface {
 	ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error)
 	TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error
 	UpdatePageRole(req *pb.PageRole) error
+	GetPageRole(req *pb.PageRole) (*pb.PageRole, error)
+	TranDelPageRole(req []*pb.PageRole) error
 }
 
 func NewPermisssion(cf *Configs) (*Permission, error) {

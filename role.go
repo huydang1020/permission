@@ -82,3 +82,34 @@ func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empt
 	}
 	return nil, nil
 }
+
+func (p *Permission) CheckAccess(ctx context.Context, in *pb.PolicyRequest) (*common.Empty, error) {
+	if in.GetRoleId() == "" || in.GetObjectId() == "" || in.GetAction() == "" {
+		return nil, errors.New(utils.E_error_invalid_params)
+	}
+	log.Print("Do enforce:", in.GetRoleId(), in.GetObjectId(), in.GetAction())
+
+	page, err := p.Db.GetPage(&pb.Page{Route: in.GetObjectId()})
+	if err != nil {
+		log.Println("get page err:", err)
+		return nil, err
+	}
+	if page == nil {
+		log.Println("page not found")
+		return nil, errors.New(utils.E_not_found_page)
+	}
+	pageRole, err := p.Db.GetPageRole(&pb.PageRole{PageId: page.GetId(), RoleId: in.GetRoleId()})
+	if err != nil {
+		log.Println("get page role err:", err)
+		return nil, err
+	}
+	if pageRole == nil || pageRole.GetActions() == nil {
+		return nil, errors.New(utils.E_access_is_denied)
+	}
+	for _, act := range pageRole.GetActions() {
+		if act == in.GetAction() {
+			return &common.Empty{}, nil
+		}
+	}
+	return nil, errors.New(utils.E_access_is_denied)
+}
