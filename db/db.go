@@ -322,12 +322,9 @@ func (d *DB) UpdatePageRole(req *pb.PageRole) error {
 	if !b {
 		return errors.New(utils.E_not_found)
 	}
-	count, err := d.engine.Update(req, &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
+	_, err = d.engine.Update(req, &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
 	if err != nil {
 		return err
-	}
-	if count < 1 {
-		return errors.New(utils.E_can_not_update)
 	}
 	return nil
 }
