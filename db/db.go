@@ -144,15 +144,14 @@ func (d *DB) InsertPage(req *pb.Page) (*pb.Page, error) {
 }
 
 func (d *DB) GetPage(req *pb.Page) (*pb.Page, error) {
-	page := &pb.Page{Id: req.Id}
-	b, err := d.engine.Get(page)
+	b, err := d.engine.Get(req)
 	if err != nil {
 		return nil, err
 	}
 	if !b {
 		return nil, errors.New(utils.E_not_found)
 	}
-	return page, nil
+	return req, nil
 }
 
 func (d *DB) listPageQuery(req *pb.PageRequest) *xorm.Session {

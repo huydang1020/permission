@@ -2,7 +2,7 @@ module github.com/huyshop/permission
 
 go 1.23.7
 
-replace github.com/huyshop/header v0.0.22 => ../header
+replace github.com/huyshop/header v0.0.23 => ../header
 
 require (
 	github.com/go-sql-driver/mysql v1.9.0

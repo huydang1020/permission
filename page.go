@@ -126,6 +126,7 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	mapNewPR := map[string]*pb.PageRole{}
 	mapUpdatePR := map[string]*pb.PageRole{}
 	for _, pr := range req.GetRoleActions() {
+		pr.PageId = req.GetId()
 		if pr.GetRoleId() == "" {
 			return nil, errors.New(utils.E_not_found_role_id)
 		}
@@ -138,7 +139,6 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	}
 	if len(mapNewPR) > 0 {
 		for _, pr := range mapNewPR {
-			pr.PageId = req.GetId()
 			if err := p.Db.InsertPageRole(pr); err != nil {
 				log.Println("insert page role err:", err)
 				return nil, err
