@@ -72,9 +72,7 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		log.Println("err:", err)
 		return nil, err
 	}
-	// pageIds := []string{}
 	for _, pr := range pageRoles {
-		// pageIds = append(pageIds, pr.GetPageId())
 		if r, ok := mapRoles[pr.GetRoleId()]; ok {
 			pr.Role = &pb.Role{
 				Id:          r.GetId(),
@@ -82,9 +80,9 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 				Description: r.GetDescription(),
 				State:       r.GetState(),
 			}
+			req.Ids = append(req.Ids, pr.GetPageId())
 		}
 	}
-	// req.Ids = pageIds
 	pages, err := p.Db.ListPage(req)
 	if err != nil {
 		return nil, err
