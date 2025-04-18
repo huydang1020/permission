@@ -12,8 +12,8 @@ import (
 )
 
 func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {
-	if req.GetName() == "" {
-		return nil, errors.New(utils.E_not_found_name)
+	if req.GetPath() == "" {
+		return nil, errors.New(utils.E_not_found_path)
 	}
 	req.Id = utils.MakePageId()
 	req.CreatedAt = time.Now().Unix()
@@ -63,11 +63,13 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		log.Println("err:", err)
 		return nil, err
 	}
+	log.Println("roles:", roles)
 	mapRoles := map[string]*pb.Role{}
 	for _, r := range roles {
 		mapRoles[r.GetId()] = r
 	}
 	pageRoles, err := p.Db.ListPageRole(&pb.PageRoleRequest{RoleId: req.GetRoleId()})
+	log.Println("pageRoles:", pageRoles)
 	if err != nil {
 		log.Println("err:", err)
 		return nil, err
@@ -174,5 +176,5 @@ func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empt
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return &common.Empty{}, nil
 }

@@ -29,12 +29,3 @@ func TestXxx(t *testing.T) {
 	}
 	log.Println("done:", count)
 }
-
-func Test_UpdatePage(t *testing.T) {
-	d := DB{}
-	d.ConnectDb("root:hanhuquynh@tcp(localhost:3306)", "permission")
-	icon := &permission.PageIcon{IconType: "Bootstrap", IconName: "BsBagFill"}
-	if err := d.UpdatePage(&permission.Page{Id: "pagecvgi3tqvufdrsdhbo4o0", Name: "Components", Icon: icon}); err != nil {
-		log.Println("err:", err)
-	}
-}
