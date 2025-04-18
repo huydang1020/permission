@@ -16,4 +16,5 @@ const (
 	E_error_invalid_params = "error_invalid_params"
 	E_access_is_denied     = "access_is_denied"
 	E_not_found_page       = "not_found_page"
+	E_not_found_role       = "not_found_role"
 )

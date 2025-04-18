@@ -56,7 +56,7 @@ func (d *DB) GetRole(req *pb.Role) (*pb.Role, error) {
 		return nil, err
 	}
 	if !b {
-		return nil, errors.New(utils.E_not_found)
+		return nil, errors.New(utils.E_not_found_role)
 	}
 	return role, nil
 }
@@ -102,7 +102,7 @@ func (d *DB) UpdateRole(req *pb.Role) error {
 		return err
 	}
 	if !b {
-		return errors.New(utils.E_not_found)
+		return errors.New(utils.E_not_found_role)
 	}
 	count, err := d.engine.Update(req, &pb.Role{Id: req.Id})
 	if err != nil {
@@ -120,7 +120,7 @@ func (d *DB) DeleteRole(req *pb.Role) error {
 		return err
 	}
 	if !b {
-		return errors.New(utils.E_not_found)
+		return errors.New(utils.E_not_found_role)
 	}
 	count, err := d.engine.Delete(req)
 	if err != nil {
@@ -149,7 +149,7 @@ func (d *DB) GetPage(req *pb.Page) (*pb.Page, error) {
 		return nil, err
 	}
 	if !b {
-		return nil, errors.New(utils.E_not_found)
+		return nil, errors.New(utils.E_not_found_page)
 	}
 	return req, nil
 }
@@ -210,7 +210,7 @@ func (d *DB) UpdatePage(req *pb.Page) error {
 		return err
 	}
 	if !b {
-		return errors.New(utils.E_not_found)
+		return errors.New(utils.E_not_found_page)
 	}
 	count, err := d.engine.Update(req, &pb.Page{Id: req.Id})
 	if err != nil {
@@ -228,7 +228,7 @@ func (d *DB) DeletePage(req *pb.Page) error {
 		return err
 	}
 	if !b {
-		return errors.New(utils.E_not_found)
+		return errors.New(utils.E_not_found_page)
 	}
 	count, err := d.engine.Delete(req)
 	if err != nil {
@@ -319,7 +319,7 @@ func (d *DB) UpdatePageRole(req *pb.PageRole) error {
 		return err
 	}
 	if !b {
-		return errors.New(utils.E_not_found)
+		return errors.New(utils.E_not_found_page)
 	}
 	_, err = d.engine.Update(req, &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
 	if err != nil {
@@ -356,7 +356,7 @@ func (d *DB) GetPageRole(req *pb.PageRole) (*pb.PageRole, error) {
 		return nil, err
 	}
 	if !b {
-		return nil, errors.New(utils.E_not_found)
+		return nil, errors.New(utils.E_not_found_page)
 	}
 	return pageRole, nil
 }
