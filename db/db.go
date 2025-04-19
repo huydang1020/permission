@@ -132,6 +132,31 @@ func (d *DB) DeleteRole(req *pb.Role) error {
 	return nil
 }
 
+func (d *DB) TranDeleteRole(req *pb.Role) error {
+	ss := d.engine.NewSession()
+	defer ss.Close()
+
+	if err := ss.Begin(); err != nil {
+		return err
+	}
+	_, err := ss.Table(tblGroup).Delete(&pb.Group{RoleId: req.GetId()})
+	if err != nil {
+		ss.Rollback()
+		log.Println("delete error:", err)
+		return err
+	}
+	_, err = ss.Table(tblRole).Delete(&pb.Role{Id: req.GetId()})
+	if err != nil {
+		ss.Rollback()
+		log.Println("delete error:", err)
+		return err
+	}
+	if err := ss.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *DB) InsertPage(req *pb.Page) (*pb.Page, error) {
 	count, err := d.engine.Insert(req)
 	if err != nil {
@@ -278,4 +303,37 @@ func (d *DB) ListGroup(req *pb.Group) ([]*pb.Group, error) {
 		return nil, err
 	}
 	return groups, nil
+}
+
+func (d *DB) DeleteGroup(req *pb.Group) error {
+	count, err := d.engine.Delete(req)
+	if err != nil {
+		return err
+	}
+	if count < 1 {
+		return errors.New(utils.E_can_not_delete)
+	}
+	return nil
+}
+
+func (d *DB) UpdateGroup(req ...*pb.Group) error {
+	for _, gr := range req {
+		count, err := d.engine.Update(gr, &pb.Group{RoleId: gr.GetRoleId(), Group: gr.GetGroup()})
+		if err != nil {
+			return err
+		}
+		if count < 1 {
+			log.Println("update group err:", utils.E_can_not_update)
+			return nil
+		}
+	}
+	return nil
+}
+
+func (d *DB) IsGroupExist(req *pb.Group) (bool, error) {
+	b, err := d.engine.Exist(&pb.Group{RoleId: req.GetRoleId()})
+	if err != nil {
+		return false, err
+	}
+	return b, nil
 }

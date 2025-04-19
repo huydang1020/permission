@@ -76,6 +76,50 @@ func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, er
 	if err != nil {
 		return nil, err
 	}
+	mapOldGR := map[string]*pb.Group{}
+	listGroup, err := p.Db.ListGroup(&pb.Group{RoleId: req.GetId()})
+	if err != nil {
+		log.Println("list page role err:", err)
+		return nil, err
+	}
+	for _, gr := range listGroup {
+		mapOldGR[gr.GetGroup()] = gr
+	}
+	mapNewGR := map[string]*pb.Group{}
+	mapUpdateGR := map[string]*pb.Group{}
+	for _, gr := range req.GetGroups() {
+		gr.RoleId = req.GetId()
+		if _, ok := mapOldGR[gr.GetGroup()]; ok {
+			mapUpdateGR[gr.GetGroup()] = gr
+			delete(mapOldGR, gr.GetGroup())
+		} else {
+			mapNewGR[gr.GetGroup()] = gr
+		}
+	}
+	if len(mapNewGR) > 0 {
+		for _, gr := range mapNewGR {
+			if err := p.Db.InsertGroup(gr); err != nil {
+				log.Println("insert page role err:", err)
+				return nil, err
+			}
+		}
+	}
+	if len(mapOldGR) > 0 {
+		for _, gr := range mapOldGR {
+			if err := p.Db.DeleteGroup(gr); err != nil {
+				log.Println("delete page role err:", err)
+				return nil, err
+			}
+		}
+	}
+	if len(mapUpdateGR) > 0 {
+		for _, pr := range mapUpdateGR {
+			if err := p.Db.UpdateGroup(pr); err != nil {
+				log.Println("update page role err:", err)
+				return nil, err
+			}
+		}
+	}
 	role, err := p.Db.GetRole(req)
 	if err != nil {
 		return nil, err
@@ -88,8 +132,8 @@ func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empt
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
-	if err := p.Db.DeleteRole(req); err != nil {
-		return nil, err
+	if err := p.Db.TranDeleteRole(req); err != nil {
+		return nil, errors.New(utils.E_can_not_delete)
 	}
 	return nil, nil
 }
@@ -102,7 +146,7 @@ func (p *Permission) CheckAccess(ctx context.Context, in *pb.PolicyRequest) (*co
 	group, err := p.Db.GetGroup(&pb.Group{RoleId: in.GetRoleId(), Group: in.GetGroup()})
 	if err != nil {
 		log.Println("get page err:", err)
-		return nil, err
+		return nil, errors.New(utils.E_access_is_denied)
 	}
 	if !slices.Contains(group.GetActions(), in.GetAction()) {
 		return nil, errors.New(utils.E_access_is_denied)

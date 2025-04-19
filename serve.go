@@ -24,6 +24,7 @@ type IDatabase interface {
 	DeleteRole(req *pb.Role) error
 	IsRoleExist(req *pb.Role) (bool, error)
 	CountRoles(rq *pb.RoleRequest) (int64, error)
+	TranDeleteRole(req *pb.Role) error
 
 	InsertPage(req *pb.Page) (*pb.Page, error)
 	GetPage(req *pb.Page) (*pb.Page, error)
@@ -36,6 +37,8 @@ type IDatabase interface {
 	InsertGroup(req ...*pb.Group) error
 	GetGroup(req *pb.Group) (*pb.Group, error)
 	ListGroup(req *pb.Group) ([]*pb.Group, error)
+	DeleteGroup(req *pb.Group) error
+	UpdateGroup(req ...*pb.Group) error
 }
 
 func NewPermisssion(cf *Configs) (*Permission, error) {
