@@ -236,61 +236,7 @@ func (d *DB) DeletePage(req *pb.Page) error {
 	return nil
 }
 
-func (d *DB) TranDeletePage(req *pb.Page) error {
-	sess := d.engine.NewSession()
-	defer sess.Close()
-	if err := sess.Begin(); err != nil {
-		return err
-	}
-	count, err := sess.Delete(req)
-	if err != nil {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_delete)
-	}
-	if count < 1 {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_delete)
-	}
-	count, err = sess.Delete(&pb.PageRole{PageId: req.Id})
-	if err != nil {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_delete)
-	}
-	if count < 1 {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_delete)
-	}
-	return sess.Commit()
-}
-
-func (d *DB) TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error {
-	sess := d.engine.NewSession()
-	defer sess.Close()
-	if err := sess.Begin(); err != nil {
-		return err
-	}
-	count, err := sess.Insert(role)
-	if err != nil {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_insert)
-	}
-	if count < 1 {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_insert)
-	}
-	count, err = sess.Insert(pg)
-	if err != nil {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_insert)
-	}
-	if count < 1 {
-		sess.Rollback()
-		return errors.New(utils.E_can_not_insert)
-	}
-	return sess.Commit()
-}
-
-func (d *DB) InsertPageRole(req *pb.PageRole) error {
+func (d *DB) InsertGroup(req ...*pb.Group) error {
 	count, err := d.engine.Insert(req)
 	if err != nil {
 		return err
@@ -301,78 +247,35 @@ func (d *DB) InsertPageRole(req *pb.PageRole) error {
 	return nil
 }
 
-func (d *DB) IsPageRoleExist(req *pb.PageRole) (bool, error) {
-	b, err := d.engine.Exist(&pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
+func (d *DB) GetGroup(req *pb.Group) (*pb.Group, error) {
+	b, err := d.engine.Get(req)
 	if err != nil {
-		return false, err
-	}
-	return b, err
-}
-
-func (d *DB) UpdatePageRole(req *pb.PageRole) error {
-	b, err := d.IsPageRoleExist(req)
-	if err != nil {
-		return err
+		return nil, err
 	}
 	if !b {
-		return errors.New(utils.E_not_found_page)
+		return nil, errors.New(utils.E_not_found_group)
 	}
-	_, err = d.engine.Update(req, &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId})
-	if err != nil {
-		return err
-	}
-	return nil
+	return req, nil
 }
 
-func (d *DB) listPageRoleQuery(req *pb.PageRoleRequest) *xorm.Session {
-	ss := d.engine.Table("page_role")
-	if req.RoleId != "" {
-		ss.And("role_id = ?", req.RoleId)
+func (d *DB) listGroupQuery(req *pb.Group) *xorm.Session {
+	ss := d.engine.Table("group")
+	if req.GetRoleId() != "" {
+		ss.And("role_id = ?", req.GetRoleId())
 	}
-	if req.PageId != "" {
-		ss.And("page_id = ?", req.PageId)
+	if req.GetGroup() != "" {
+		ss.And("group = ?", req.GetGroup())
 	}
 	return ss
 }
 
-func (d *DB) ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error) {
-	pr := []*pb.PageRole{}
-	ss := d.listPageRoleQuery(req)
-	err := ss.Find(&pr)
+func (d *DB) ListGroup(req *pb.Group) ([]*pb.Group, error) {
+	groups := []*pb.Group{}
+	ss := d.listGroupQuery(req)
+	err := ss.Find(&groups)
 	if err != nil {
+		log.Println("get list err:", err)
 		return nil, err
 	}
-	return pr, nil
-}
-
-func (d *DB) GetPageRole(req *pb.PageRole) (*pb.PageRole, error) {
-	pageRole := &pb.PageRole{RoleId: req.RoleId, PageId: req.PageId}
-	b, err := d.engine.Get(pageRole)
-	if err != nil {
-		return nil, err
-	}
-	if !b {
-		return nil, errors.New(utils.E_not_found_page)
-	}
-	return pageRole, nil
-}
-
-func (d *DB) TranDelPageRole(req []*pb.PageRole) error {
-	sess := d.engine.NewSession()
-	defer sess.Close()
-	if err := sess.Begin(); err != nil {
-		return err
-	}
-	for _, r := range req {
-		count, err := sess.Delete(r)
-		if err != nil {
-			sess.Rollback()
-			return errors.New(utils.E_can_not_delete)
-		}
-		if count < 1 {
-			sess.Rollback()
-			return errors.New(utils.E_can_not_delete)
-		}
-	}
-	return sess.Commit()
+	return groups, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/huyshop/header/common"
@@ -19,14 +20,13 @@ func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empt
 	req.Id = utils.MakeRoleId()
 	req.CreatedAt = time.Now().Unix()
 	req.State = pb.Page_active.String()
-	if len(req.Page) > 0 {
-		for _, perm := range req.Page {
-			if err := p.Db.TransInsertPageRole(req, perm.PageRole); err != nil {
-				log.Println("trans insert pager role err:", err)
-				return nil, err
-			}
+	if len(req.GetGroups()) > 0 {
+		for _, group := range req.GetGroups() {
+			group.RoleId = req.GetId()
 		}
-		return &common.Empty{}, nil
+		if err := p.Db.InsertGroup(req.GetGroups()...); err != nil {
+			return nil, err
+		}
 	}
 	if err := p.Db.InsertRole(req); err != nil {
 		return nil, err
@@ -54,6 +54,13 @@ func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Ro
 	}
 	if len(roles) == 0 {
 		return &pb.Roles{}, nil
+	}
+	for _, role := range roles {
+		groups, err := p.Db.ListGroup(&pb.Group{RoleId: role.GetId()})
+		if err != nil {
+			continue
+		}
+		role.Groups = groups
 	}
 	count, _ := p.Db.CountRoles(req)
 	return &pb.Roles{Roles: roles, Total: count}, nil
@@ -92,26 +99,13 @@ func (p *Permission) CheckAccess(ctx context.Context, in *pb.PolicyRequest) (*co
 	if in.GetRoleId() == "" || in.GetGroup() == "" || in.GetAction() == "" {
 		return nil, errors.New(utils.E_error_invalid_params)
 	}
-	page, err := p.Db.GetPage(&pb.Page{Group: in.GetGroup()})
+	group, err := p.Db.GetGroup(&pb.Group{RoleId: in.GetRoleId(), Group: in.GetGroup()})
 	if err != nil {
 		log.Println("get page err:", err)
 		return nil, err
 	}
-	if page == nil {
-		return nil, errors.New(utils.E_not_found_page)
-	}
-	pageRole, err := p.Db.GetPageRole(&pb.PageRole{PageId: page.GetId(), RoleId: in.GetRoleId()})
-	if err != nil {
-		log.Println("get page role err:", err)
+	if !slices.Contains(group.GetActions(), in.GetAction()) {
 		return nil, errors.New(utils.E_access_is_denied)
 	}
-	if pageRole == nil || pageRole.GetActions() == nil {
-		return nil, errors.New(utils.E_access_is_denied)
-	}
-	for _, act := range pageRole.GetActions() {
-		if act == in.GetAction() {
-			return &common.Empty{}, nil
-		}
-	}
-	return nil, errors.New(utils.E_access_is_denied)
+	return &common.Empty{}, nil
 }

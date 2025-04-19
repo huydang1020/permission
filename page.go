@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/huyshop/header/common"
@@ -16,32 +17,12 @@ func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	if req.GetPath() == "" {
 		return nil, errors.New(utils.E_not_found_path)
 	}
-	c, err := p.Db.IsPageExist(&pb.Page{Group: req.GetGroup()})
-	if err != nil {
-		log.Println("page exist err:", err)
-		return nil, err
-	}
-	if c {
-		return nil, errors.New(utils.E_group_exist)
-	}
 	req.Id = utils.MakePageId()
 	req.CreatedAt = time.Now().Unix()
 	req.State = pb.Page_active.String()
 	page, err := p.Db.InsertPage(req)
 	if err != nil {
 		return nil, err
-	}
-	if req.GetRoleActions() != nil {
-		for _, pr := range req.GetRoleActions() {
-			pr.PageId = page.GetId()
-			if pr.GetRoleId() == "" {
-				return nil, errors.New(utils.E_not_found_role_id)
-			}
-			if err := p.Db.InsertPageRole(pr); err != nil {
-				log.Println("insert page role err:", err)
-				return nil, err
-			}
-		}
 	}
 	return page, nil
 }
@@ -68,51 +49,25 @@ func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page
 
 func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pages, error) {
 	log.Println("list page:", req)
-	roles, err := p.Db.ListRole(&pb.RoleRequest{Id: req.GetRoleId()})
-	if err != nil {
-		log.Println("err:", err)
-		return nil, err
-	}
-	mapRoles := map[string]*pb.Role{}
-	for _, r := range roles {
-		mapRoles[r.GetId()] = r
-	}
-	pageRoles, err := p.Db.ListPageRole(&pb.PageRoleRequest{RoleId: req.GetRoleId()})
-	if err != nil {
-		log.Println("err:", err)
-		return nil, err
-	}
-	for _, pr := range pageRoles {
-		if r, ok := mapRoles[pr.GetRoleId()]; ok {
-			pr.Role = &pb.Role{
-				Id:          r.GetId(),
-				Name:        r.GetName(),
-				Description: r.GetDescription(),
-				State:       r.GetState(),
-			}
-			// chỉ lấy page của role_id(nếu có)
-			if req.RoleId != "" {
-				req.Ids = append(req.Ids, pr.GetPageId())
-			}
-		}
-	}
-	pages, err := p.Db.ListPage(req)
+	var pages []*pb.Page
+	var err error
+	pages, err = p.Db.ListPage(req)
 	if err != nil {
 		return nil, err
 	}
-	if len(pageRoles) > 0 {
+	if req.GetRoleId() != "" {
+		newPages := make([]*pb.Page, 0, len(pages))
 		for _, page := range pages {
-			for _, pr := range pageRoles {
-				if page.GetId() == pr.GetPageId() {
-					page.RoleActions = append(page.RoleActions, &pb.PageRole{RoleId: pr.GetRoleId(), Actions: pr.GetActions(), Role: pr.GetRole()})
-				}
+			if slices.Contains(page.GetRoleIds(), req.GetRoleId()) {
+				newPages = append(newPages, page)
 			}
 		}
+		pages = newPages
 	}
-	if len(pages) == 0 {
-		return &pb.Pages{Pages: pages, Total: 0}, nil
+	count, err := p.Db.CountPages(req)
+	if err != nil {
+		return nil, err
 	}
-	count, _ := p.Db.CountPages(req)
 	return &pb.Pages{Pages: pages, Total: count}, nil
 }
 
@@ -126,53 +81,53 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 	if err != nil {
 		return nil, err
 	}
-	mapOldPR := map[string]*pb.PageRole{}
-	listpr, err := p.Db.ListPageRole(&pb.PageRoleRequest{PageId: req.GetId()})
-	if err != nil {
-		log.Println("list page role err:", err)
-		return nil, err
-	}
-	for _, pr := range listpr {
-		mapOldPR[pr.GetRoleId()] = pr
-	}
-	mapNewPR := map[string]*pb.PageRole{}
-	mapUpdatePR := map[string]*pb.PageRole{}
-	for _, pr := range req.GetRoleActions() {
-		pr.PageId = req.GetId()
-		if pr.GetRoleId() == "" {
-			return nil, errors.New(utils.E_not_found_role_id)
-		}
-		if _, ok := mapOldPR[pr.GetRoleId()]; ok {
-			mapUpdatePR[pr.GetRoleId()] = pr
-			delete(mapOldPR, pr.GetRoleId())
-		} else {
-			mapNewPR[pr.GetRoleId()] = pr
-		}
-	}
-	if len(mapNewPR) > 0 {
-		for _, pr := range mapNewPR {
-			if err := p.Db.InsertPageRole(pr); err != nil {
-				log.Println("insert page role err:", err)
-				return nil, err
-			}
-		}
-	}
-	if len(mapOldPR) > 0 {
-		for _, pr := range mapOldPR {
-			if err := p.Db.TranDelPageRole([]*pb.PageRole{pr}); err != nil {
-				log.Println("delete page role err:", err)
-				return nil, err
-			}
-		}
-	}
-	if len(mapUpdatePR) > 0 {
-		for _, pr := range mapUpdatePR {
-			if err := p.Db.UpdatePageRole(pr); err != nil {
-				log.Println("update page role err:", err)
-				return nil, err
-			}
-		}
-	}
+	// mapOldPR := map[string]*pb.PageRole{}
+	// listpr, err := p.Db.ListPageRole(&pb.PageRoleRequest{PageId: req.GetId()})
+	// if err != nil {
+	// 	log.Println("list page role err:", err)
+	// 	return nil, err
+	// }
+	// for _, pr := range listpr {
+	// 	mapOldPR[pr.GetRoleId()] = pr
+	// }
+	// mapNewPR := map[string]*pb.PageRole{}
+	// mapUpdatePR := map[string]*pb.PageRole{}
+	// for _, pr := range req.GetRoleActions() {
+	// 	pr.PageId = req.GetId()
+	// 	if pr.GetRoleId() == "" {
+	// 		return nil, errors.New(utils.E_not_found_role_id)
+	// 	}
+	// 	if _, ok := mapOldPR[pr.GetRoleId()]; ok {
+	// 		mapUpdatePR[pr.GetRoleId()] = pr
+	// 		delete(mapOldPR, pr.GetRoleId())
+	// 	} else {
+	// 		mapNewPR[pr.GetRoleId()] = pr
+	// 	}
+	// }
+	// if len(mapNewPR) > 0 {
+	// 	for _, pr := range mapNewPR {
+	// 		if err := p.Db.InsertPageRole(pr); err != nil {
+	// 			log.Println("insert page role err:", err)
+	// 			return nil, err
+	// 		}
+	// 	}
+	// }
+	// if len(mapOldPR) > 0 {
+	// 	for _, pr := range mapOldPR {
+	// 		if err := p.Db.TranDelPageRole([]*pb.PageRole{pr}); err != nil {
+	// 			log.Println("delete page role err:", err)
+	// 			return nil, err
+	// 		}
+	// 	}
+	// }
+	// if len(mapUpdatePR) > 0 {
+	// 	for _, pr := range mapUpdatePR {
+	// 		if err := p.Db.UpdatePageRole(pr); err != nil {
+	// 			log.Println("update page role err:", err)
+	// 			return nil, err
+	// 		}
+	// 	}
+	// }
 	page, err := p.Db.GetPage(req)
 	if err != nil {
 		return nil, err
@@ -185,7 +140,7 @@ func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empt
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
-	err := p.Db.TranDeletePage(&pb.Page{Id: req.GetId()})
+	err := p.Db.DeletePage(&pb.Page{Id: req.GetId()})
 	if err != nil {
 		return nil, err
 	}

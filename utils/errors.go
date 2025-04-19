@@ -18,4 +18,5 @@ const (
 	E_not_found_page       = "not_found_page"
 	E_not_found_role       = "not_found_role"
 	E_group_exist          = "group_exist"
+	E_not_found_group      = "not_found_group"
 )

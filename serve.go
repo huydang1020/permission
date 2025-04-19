@@ -32,14 +32,10 @@ type IDatabase interface {
 	IsPageExist(req *pb.Page) (bool, error)
 	DeletePage(req *pb.Page) error
 	CountPages(rq *pb.PageRequest) (int64, error)
-	TranDeletePage(req *pb.Page) error
 
-	InsertPageRole(req *pb.PageRole) error
-	ListPageRole(req *pb.PageRoleRequest) ([]*pb.PageRole, error)
-	TransInsertPageRole(role *pb.Role, pg *pb.PageRole) error
-	UpdatePageRole(req *pb.PageRole) error
-	GetPageRole(req *pb.PageRole) (*pb.PageRole, error)
-	TranDelPageRole(req []*pb.PageRole) error
+	InsertGroup(req ...*pb.Group) error
+	GetGroup(req *pb.Group) (*pb.Group, error)
+	ListGroup(req *pb.Group) ([]*pb.Group, error)
 }
 
 func NewPermisssion(cf *Configs) (*Permission, error) {
