@@ -197,11 +197,7 @@ func (d *DB) CountPages(rq *pb.PageRequest) (int64, error) {
 }
 
 func (d *DB) IsPageExist(req *pb.Page) (bool, error) {
-	b, err := d.engine.Exist(&pb.Page{Id: req.Id})
-	if err != nil {
-		return false, err
-	}
-	return b, err
+	return d.engine.Exist(&pb.Page{Id: req.Id})
 }
 
 func (d *DB) UpdatePage(req *pb.Page) error {

@@ -12,6 +12,7 @@ import (
 )
 
 func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empty, error) {
+	log.Println("create role:", req)
 	if req.GetName() == "" {
 		return nil, errors.New(utils.E_not_found_name)
 	}
@@ -34,6 +35,7 @@ func (p *Permission) CreateRole(ctx context.Context, req *pb.Role) (*common.Empt
 }
 
 func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role, error) {
+	log.Println("get role:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
@@ -45,7 +47,7 @@ func (p *Permission) GetRole(ctx context.Context, req *pb.RoleRequest) (*pb.Role
 }
 
 func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Roles, error) {
-	log.Println("req: ", req)
+	log.Println("list role:", req)
 	roles, err := p.Db.ListRole(req)
 	if err != nil {
 		return nil, err
@@ -58,6 +60,7 @@ func (p *Permission) ListRoles(ctx context.Context, req *pb.RoleRequest) (*pb.Ro
 }
 
 func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, error) {
+	log.Println("update role:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
@@ -74,6 +77,7 @@ func (p *Permission) UpdateRole(ctx context.Context, req *pb.Role) (*pb.Role, er
 }
 
 func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empty, error) {
+	log.Println("delete role:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
@@ -84,35 +88,30 @@ func (p *Permission) DeleteRole(ctx context.Context, req *pb.Role) (*common.Empt
 }
 
 func (p *Permission) CheckAccess(ctx context.Context, in *pb.PolicyRequest) (*common.Empty, error) {
-	// log.Println("in:", in)
-	// if in.GetRoleId() == "" || in.GetObjectId() == "" || in.GetAction() == "" {
-	// 	return nil, errors.New(utils.E_error_invalid_params)
-	// }
-	// log.Println("check access:", in)
-	// page, err := p.Db.GetPage(&pb.Page{Route: in.GetObjectId()})
-	// if err != nil {
-	// 	log.Println("get page err:", err)
-	// 	return nil, err
-	// }
-	// if page == nil {
-	// 	return nil, errors.New(utils.E_not_found_page)
-	// }
-	// pageRole, err := p.Db.GetPageRole(&pb.PageRole{PageId: page.GetId(), RoleId: in.GetRoleId()})
-	// if err != nil {
-	// 	log.Println("get page role err:", err)
-	// 	return nil, errors.New(utils.E_access_is_denied)
-	// }
-	// log.Println("page role:", pageRole)
-	// log.Println("1")
-	// if pageRole == nil || pageRole.GetActions() == nil {
-	// 	return nil, errors.New(utils.E_access_is_denied)
-	// }
-	// for _, act := range pageRole.GetActions() {
-	// 	if act == in.GetAction() {
-	// 		return &common.Empty{}, nil
-	// 	}
-	// }
-	// log.Println("2")
-	// return nil, errors.New(utils.E_access_is_denied)
-	return nil, nil
+	log.Println("check access:", in)
+	if in.GetRoleId() == "" || in.GetGroup() == "" || in.GetAction() == "" {
+		return nil, errors.New(utils.E_error_invalid_params)
+	}
+	page, err := p.Db.GetPage(&pb.Page{Group: in.GetGroup()})
+	if err != nil {
+		log.Println("get page err:", err)
+		return nil, err
+	}
+	if page == nil {
+		return nil, errors.New(utils.E_not_found_page)
+	}
+	pageRole, err := p.Db.GetPageRole(&pb.PageRole{PageId: page.GetId(), RoleId: in.GetRoleId()})
+	if err != nil {
+		log.Println("get page role err:", err)
+		return nil, errors.New(utils.E_access_is_denied)
+	}
+	if pageRole == nil || pageRole.GetActions() == nil {
+		return nil, errors.New(utils.E_access_is_denied)
+	}
+	for _, act := range pageRole.GetActions() {
+		if act == in.GetAction() {
+			return &common.Empty{}, nil
+		}
+	}
+	return nil, errors.New(utils.E_access_is_denied)
 }

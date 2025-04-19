@@ -12,8 +12,17 @@ import (
 )
 
 func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {
+	log.Println("create page:", req)
 	if req.GetPath() == "" {
 		return nil, errors.New(utils.E_not_found_path)
+	}
+	c, err := p.Db.IsPageExist(&pb.Page{Group: req.GetGroup()})
+	if err != nil {
+		log.Println("page exist err:", err)
+		return nil, err
+	}
+	if c {
+		return nil, errors.New(utils.E_group_exist)
 	}
 	req.Id = utils.MakePageId()
 	req.CreatedAt = time.Now().Unix()
@@ -38,6 +47,7 @@ func (p *Permission) CreatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 }
 
 func (p *Permission) GetPage(ctx context.Context, req *pb.PageRequest) (*pb.Page, error) {
+	log.Println("get page:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
@@ -63,13 +73,11 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 		log.Println("err:", err)
 		return nil, err
 	}
-	log.Println("roles:", roles)
 	mapRoles := map[string]*pb.Role{}
 	for _, r := range roles {
 		mapRoles[r.GetId()] = r
 	}
 	pageRoles, err := p.Db.ListPageRole(&pb.PageRoleRequest{RoleId: req.GetRoleId()})
-	log.Println("pageRoles:", pageRoles)
 	if err != nil {
 		log.Println("err:", err)
 		return nil, err
@@ -82,7 +90,10 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 				Description: r.GetDescription(),
 				State:       r.GetState(),
 			}
-			req.Ids = append(req.Ids, pr.GetPageId())
+			// chỉ lấy page của role_id(nếu có)
+			if req.RoleId != "" {
+				req.Ids = append(req.Ids, pr.GetPageId())
+			}
 		}
 	}
 	pages, err := p.Db.ListPage(req)
@@ -106,6 +117,7 @@ func (p *Permission) ListPages(ctx context.Context, req *pb.PageRequest) (*pb.Pa
 }
 
 func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, error) {
+	log.Println("update page:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
@@ -169,6 +181,7 @@ func (p *Permission) UpdatePage(ctx context.Context, req *pb.Page) (*pb.Page, er
 }
 
 func (p *Permission) DeletePage(ctx context.Context, req *pb.Page) (*common.Empty, error) {
+	log.Println("delete page:", req)
 	if req.GetId() == "" {
 		return nil, errors.New(utils.E_not_found_id)
 	}
