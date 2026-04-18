@@ -24,15 +24,30 @@ var config *Configs
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading env:", err)
+
+	if _, err := os.Stat(".env"); err == nil {
+		err := godotenv.Load()
+		if err != nil {
+			log.Println("Warning: Error loading .env file:", err)
+		} else {
+			log.Println("Loaded .env file for local development")
+		}
+	} else {
+		log.Println("No .env file found, using system environment variables")
 	}
+
 	config = &Configs{
-		GRPCPort: os.Getenv("GRPC_PORT"),
-		DBPath:   os.Getenv("DB_PATH"),
-		DBName:   os.Getenv("DB_NAME"),
+		GRPCPort: getEnv("GRPC_PORT", "7000"),
+		DBPath:   getEnv("DB_PATH", "root:123456@tcp(localhost:3306)"),
+		DBName:   getEnv("DB_NAME", "permission"),
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
 
 func startApp(ctx *cli.Context) error {
